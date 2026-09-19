@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة قانوني QCM - التحضير للامتحانات</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --success: #10b981;
+            --danger: #ef4444;
+            --gold: #fbbf24;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+        h1 {
+            color: var(--accent);
+            margin-bottom: 5px;
+        }
+        p.subtitle {
+            color: var(--text-muted);
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+        .grid-menu {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        button {
+            background-color: var(--card-bg);
+            color: var(--text-main);
+            border: 2px solid var(--accent);
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            background-color: var(--accent);
+            color: white;
+        }
+        .premium-btn {
+            border-color: var(--gold);
+            position: relative;
+        }
+        .premium-btn::after {
+            content: '🔒 مدفوع';
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            background: var(--gold);
+            color: #000;
+            font-size: 0.7em;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+        .premium-btn:hover {
+            background-color: var(--gold);
+            color: #000;
+        }
+        .hidden { display: none; }
+        .question-box { text-align: right; }
+        .question-text { font-size: 1.2em; margin-bottom: 20px; font-weight: bold; }
+        .option-btn {
+            display: block;
+            width: 100%;
+            text-align: right;
+            margin-bottom: 10px;
+            border: 1px solid var(--text-muted);
+            background: transparent;
+        }
+        .option-btn:hover { background-color: rgba(255,255,255,0.1); }
+        .correct { background-color: var(--success) !important; border-color: var(--success); color: white;}
+        .wrong { background-color: var(--danger) !important; border-color: var(--danger); color: white;}
+        #next-btn { background-color: var(--accent); margin-top: 20px; width: 100%; }
+        .score-board { font-size: 2em; font-weight: bold; color: var(--gold); margin: 20px 0; }
+    </style>
+</head>
+<body>
+
+<div class="container" id="main-menu">
+    <h1>قانوني QCM ⚖️</h1>
+    <p class="subtitle">منصة التحضير الذكي لطلبة الحقوق والمباريات</p>
+    <div class="grid-menu">
+        <button onclick="showModules('s1')">الفصل 1 (مرحلة مشتركة)</button>
+        <button onclick="showModules('s2')">الفصل 2 (مرحلة مشتركة)</button>
+        <button class="premium-btn" onclick="checkPremium('s5_prive')">مسار القانون الخاص (الفصل 5)</button>
+        <button class="premium-btn" onclick="checkPremium('s5_public')">مسار القانون العام (الفصل 5)</button>
+    </div>
+</div>
+
+<div class="container hidden" id="modules-menu">
+    <h2 id="semester-title">اختر المادة</h2>
+    <div class="grid-menu" id="modules-list"></div>
+    <button onclick="goHome()" style="margin-top: 20px; border-color: var(--text-muted);">رجوع</button>
+</div>
+
+<div class="container hidden" id="quiz-area">
+    <div class="question-box">
+        <div class="question-text" id="question-text">جاري التحميل...</div>
+        <div id="options-area"></div>
+        <button id="next-btn" class="hidden" onclick="nextQuestion()">السؤال التالي ➔</button>
+    </div>
+</div>
+
+<div class="container hidden" id="result-area">
+    <h2>النتيجة النهائية 🎯</h2>
+    <div class="score-board" id="final-score">0 / 20</div>
+    <p id="result-message"></p>
+    <button onclick="goHome()">العودة للرئيسية</button>
+</div>
+
+<script>
+    // قاعدة البيانات المصغرة (يمكنك إضافة مئات الأسئلة هنا لاحقاً)
+    const db = {
+        s1: {
+            title: "الفصل الأول",
+            modules: {
+                "مدخل للعلوم القانونية": [
+                    { q: "ما هو الجزاء في القاعدة القانونية؟", options: ["نصيحة أخلاقية", "أثر مادي تفرضه السلطة العامة", "عقاب ديني", "مجرد توصية"], correct: 1 },
+                    { q: "القاعدة الآمرة هي:", options: ["يجوز الاتفاق على مخالفتها", "لا يجوز الاتفاق على مخالفتها مطلقاً", "تطبق فقط في القانون الدولي", "خاصة بالقانون التجاري"], correct: 1 }
+                ]
+            }
+        },
+        s2: {
+            title: "الفصل الثاني",
+            modules: {
+                "النظرية العامة للالتزامات": [
+                    { q: "مصادر الالتزام حسب ق.ل.ع المغربي تشمل:", options: ["العقد والإرادة المنفردة فقط", "العقد، أشباه العقود، الجرائم، أشباه الجرائم، والقانون", "القانون والقرارات الإدارية فقط", "الأعراف والتقاليد"], correct: 1 }
+                ],
+                "القانون الجنائي العام": [
+                    { q: "مبدأ الشرعية الجنائية يعني:", options: ["لا جريمة ولا عقوبة إلا بنص", "للقاضي سلطة خلق الجرائم", "العقوبة تحدد بالعرف", "تطبيق القانون الأجنبي"], correct: 0 }
+                ]
+            }
+        },
+        s5_prive: {
+            title: "مسار القانون الخاص",
+            modules: {
+                "العقود المسماة": [
+                    { q: "عقد البيع في القانون المغربي هو:", options: ["عقد عيني دائماً", "عقد رضائي كأصل عام", "عقد شكلي لا ينعقد إلا بالكتابة", "عقد تبرع"], correct: 1 }
+                ]
+            }
+        }
+    };
+
+    let currentQuestions = [];
+    let currentIndex = 0;
+    let score = 0;
+
+    function goHome() {
+        hideAll();
+        document.getElementById('main-menu').classList.remove('hidden');
+    }
+
+    function checkPremium(semester) {
+        // نظام حماية بسيط (هنا تكمن فكرة بيع كود التفعيل بـ 100 أو 200 درهم)
+        let code = prompt("هذا المسار مدفوع. المرجو إدخال كود التفعيل الذي حصلت عليه بعد الشراء (جرب الكود: DROIT2026):");
+        if(code === "DROIT2026") {
+            alert("تم التفعيل بنجاح! مرحباً بك في المسار المتقدم.");
+            showModules(semester);
+        } else {
+            alert("كود خاطئ أو غير صالح. المرجو شراء النسخة الكاملة.");
+        }
+    }
+
+    function showModules(semesterKey) {
+        hideAll();
+        const data = db[semesterKey];
+        document.getElementById('semester-title').innerText = data.title;
+        const list = document.getElementById('modules-list');
+        list.innerHTML = '';
+        
+        for (let moduleName in data.modules) {
+            let btn = document.createElement('button');
+            btn.innerText = moduleName;
+            btn.onclick = () => startQuiz(data.modules[moduleName]);
+            list.appendChild(btn);
+        }
+        document.getElementById('modules-menu').classList.remove('hidden');
+    }
+
+    function startQuiz(questionsArray) {
+        currentQuestions = questionsArray;
+        currentIndex = 0;
+        score = 0;
+        hideAll();
+        document.getElementById('quiz-area').classList.remove('hidden');
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        const qData = currentQuestions[currentIndex];
+        document.getElementById('question-text').innerText = `سؤال ${currentIndex + 1}: ${qData.q}`;
+        const optionsArea = document.getElementById('options-area');
+        optionsArea.innerHTML = '';
+        document.getElementById('next-btn').classList.add('hidden');
+
+        qData.options.forEach((opt, index) => {
+            let btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(btn, index, qData.correct);
+            optionsArea.appendChild(btn);
+        });
+    }
+
+    function checkAnswer(selectedBtn, selectedIndex, correctIndex) {
+        const buttons = document.querySelectorAll('.option-btn');
+        buttons.forEach(btn => btn.disabled = true); // منع تغيير الإجابة
+
+        if (selectedIndex === correctIndex) {
+            selectedBtn.classList.add('correct');
+            score++;
+        } else {
+            selectedBtn.classList.add('wrong');
+            buttons[correctIndex].classList.add('correct'); // إظهار الجواب الصحيح
+        }
+        document.getElementById('next-btn').classList.remove('hidden');
+    }
+
+    function nextQuestion() {
+        currentIndex++;
+        if (currentIndex < currentQuestions.length) {
+            loadQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        hideAll();
+        document.getElementById('result-area').classList.remove('hidden');
+        // تحويل النقطة لنسبة مئوية ثم على 20
+        let finalMark = (score / currentQuestions.length) * 20;
+        document.getElementById('final-score').innerText = `${finalMark.toFixed(2)} / 20`;
+        
+        let msg = document.getElementById('result-message');
+        if (finalMark >= 10) msg.innerText = "عمل ممتاز! استمر في المراجعة.";
+        else msg.innerText = "تحتاج إلى المزيد من المراجعة، لا تستسلم!";
+    }
+
+    function hideAll() {
+        document.getElementById('main-menu').classList.add('hidden');
+        document.getElementById('modules-menu').classList.add('hidden');
+        document.getElementById('quiz-area').classList.add('hidden');
+        document.getElementById('result-area').classList.add('hidden');
+    }
+</script>
+</body>
+</html>
